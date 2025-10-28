@@ -1,0 +1,181 @@
+include $(ENV_PATH)/makefile_env.inc
+
+appname:= $(subst .vcxproj,,$(PROJECT_NAME))
+
+#工程目录
+PROJECT_PATH:= $(LINUX_PLAT_COMPONENT_LINUX)/apps/$(appname)
+
+#生成的目标文件名称
+TARGET_IMAGE=$(PROJECT_PATH)/dev.elf
+
+#代码路径
+INC_PATH=$(LINUX_PLAT_COMPONENT_LINUX) \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/EntryPoint \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/EntryPoint/lib_emvpub/inc \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/libapi_xpos/inc \
+			$(PROJECT_PATH)/src \
+			$(PROJECT_PATH)/src/emvapi \
+			$(LINUX_PLAT_COMPONENT_LINUX)/../ \
+			$(LINUX_PLAT_COMPONENT_LINUX)/../apppub2 \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/lvgl \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/lvgui/inc \
+			$(LINUX_PLAT_COMPONENT_LINUX)/Platform/inc \
+			$(LINUX_PLAT_COMPONENT_LINUX)/sdk/inc/AppPub/inc \
+			
+			
+INC_PATH:= $(INC_PATH) 
+
+
+
+
+APP_LIB_LIST := $(foreach dir,$(PROJECT_PATH)/lib,$(wildcard $(dir)/*.a))
+
+
+
+
+
+
+
+
+	#链接库
+LINK_LIB1=$(OUTPUT_PATH)/libatc.a \
+		$(OUTPUT_PATH)/libwifi.a \
+		$(OUTPUT_PATH)/libnet.a \
+		$(OUTPUT_PATH)/libproductTest.a \
+		$(OUTPUT_PATH)/libpub.a \
+		$(OUTPUT_PATH)/librpc.a \
+		$(OUTPUT_PATH)/libucosii.a \
+		$(OUTPUT_PATH)/libjson.a \
+		$(OUTPUT_PATH)/libtms.a \
+		$(OUTPUT_PATH)/libapppub2.a \
+		$(OUTPUT_PATH)/libapi_xpos.a \
+		$(OUTPUT_PATH)/libxgui.a \
+		$(OUTPUT_PATH)/liblvgl.a \
+		$(OUTPUT_PATH)/libbluetooth.a \
+		$(OUTPUT_PATH)/libmqtt_embed.a \
+		$(OUTPUT_PATH)/liblvglwrap.a \
+		$(OUTPUT_PATH)/libapppub.a \
+		$(OUTPUT_PATH)/libentry.a \
+		$(OUTPUT_PATH)/libemvpub.a \
+		$(OUTPUT_PATH)/libemv.a \
+		$(OUTPUT_PATH)/libpaypass.a \
+		$(OUTPUT_PATH)/libamex.a \
+		$(OUTPUT_PATH)/libquics.a \
+		$(OUTPUT_PATH)/librupay.a \
+		$(OUTPUT_PATH)/libsibs.a \
+		$(OUTPUT_PATH)/libvcps.a \
+		$(OUTPUT_PATH)/libdpas.a \
+		$(OUTPUT_PATH)/libpure.a \
+		$(OUTPUT_PATH)/libmir.a \
+		$(OUTPUT_PATH)/libjcb.a \
+		$(OUTPUT_PATH)/libswitchcheck.a \
+		$(OUTPUT_PATH)/liblvgui.a \
+		$(OUTPUT_PATH)/liblvgnet.a\
+		$(APP_LIB_LIST)
+
+
+
+		
+
+	
+binname:=$(PROJECT_PATH)/ec600u.bin
+
+
+LINK_LIB3=$(DRIVER_PATH)/hal.a
+
+LINK_LIB2=$(DRIVER_PATH)/libm.a \
+		$(DRIVER_PATH)/libc.a \
+		$(GCC_PATH)/gcc-arm-none-eabi/lib/gcc/arm-none-eabi/7.2.1/thumb/v7-ar/fpv3/hard/libgcc.a
+	
+#source文件列表src文件列表
+SRC_DIRS := $(shell find $(PROJECT_PATH)/src -maxdepth 10 -type d)
+SRC_LIST := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
+
+
+HEAD_FILE_DIRS := $(shell find $(PROJECT_PATH)/src -maxdepth 10 -type d)
+HEAD_FILE_LIST := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.h))
+
+SUBMAKEFILEFILE:=$(PROJECT_PATH)/makefile_sub.inc
+ifeq ($(SUBMAKEFILEFILE), $(wildcard $(SUBMAKEFILEFILE)))
+include $(SUBMAKEFILEFILE)
+endif
+
+INC_PATH:=$(addprefix -I, $(INC_PATH))
+#LIB_PATH:=$(addprefix -L, $(LIB_PATH))
+#LINK_LIB:=$(addprefix -l, $(LINK_LIB))
+OBJ_LIST:=$(addprefix $(OBJECT_PATH)/, $(addsuffix .o, $(basename $(SRC_LIST))))
+DEP_LIST:=$(addprefix $(DEPEND_PATH)/, $(addsuffix .d, $(basename $(SRC_LIST))))
+
+#编译及链接参数
+CFLAGS:=$(CFLAGS) $(INC_PATH)
+CXXFLAGS:=$(CXXFLAGS) $(INC_PATH)
+
+
+
+
+#指明默认目标是生成最终可执行文件。
+all: $(binname)
+
+$(binname):$(TARGET_IMAGE)
+	@echo Objcopy program file: $(binname)
+	$(OBJCOPY) -O binary $(TARGET_IMAGE) $(binname)
+	crc_bin.exe $(binname)
+	@echo Objcopy Complete!
+	
+#
+$(TARGET_IMAGE): $(OBJ_LIST) $(LINK_LIB1) $(LINK_LIB2) $(LINK_LIB3)
+	@mkdir -p $(dir $@)
+	@echo Link program file: $@
+	$(LD) $(LDFLAGS) -o $@ $(filter %.o ,$+) -nostdlib -Wl,--start-group $(LINK_LIB1)  $(LINK_LIB3) $(LINK_LIB2) -Wl,--end-group
+	@echo Build Complete!
+
+#生成依赖关系文件
+$(addprefix $(DEPEND_PATH)/, %.d):%.c
+	@echo Generate depend file $@
+	@mkdir -p $(dir $@)
+	@$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+	sed 's%^\s*\(.*\.o:\s*\)%$(OBJECT_PATH)/$(dir $<)\1%g' $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+$(addprefix $(DEPEND_PATH)/, %.d):%.cpp
+	@echo Generate depend file $@
+	@mkdir -p $(dir $@)
+	@$(CXX) -MM $(CXXFLAGS) $< > $@.$$$$; \
+	sed 's%^\s*\(.*\.o:\s*\)%$(OBJECT_PATH)/$(dir $<)\1%g' $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+#生成OBJ文件
+$(addprefix $(OBJECT_PATH)/, %.o):%.c
+	@echo Compiler source file: $<
+	@mkdir -p $(dir $@)
+	$(CC) -c $(XFLAGS) $(CFLAGS) $< -o $@
+
+$(addprefix $(OBJECT_PATH)/, %.o):%.cpp
+	@echo Compiler source file: $<
+	@mkdir -p $(dir $@)
+	$(CXX) -c $(XFLAGS) $(CXXFLAGS)  $< -o $@
+	
+	
+$(OBJ_LIST): ${HEAD_FILE_LIST}
+
+# 包含入依赖关系文件
+-include $(DEP_LIST)
+
+# 删除生成的中间文件
+clean:
+	-rm -r $(OBJECT_PATH)
+	-rm -r $(DEPEND_PATH)
+#	-rm -r $(TARGET_PATH)
+	-rm $(TARGET_IMAGE)
+
+disenv:
+	@echo "LINUX_PLAT_COMPONENT_LINUX = $(LINUX_PLAT_COMPONENT_LINUX)"
+	@echo "PROJECT_PATH = $(PROJECT_PATH)"
+	@echo "DEV_LCD = $(DEV_LCD)"
+	@echo "OUTPUT_PATH = $(OUTPUT_PATH)"
+	@echo "C_DEV_LCD = $(C_DEV_LCD)"
+	@echo "TARGET_IMAGE = $(TARGET_IMAGE)"
+	@echo "CFLAGS = $(CFLAGS)"
+	@echo "CFLAGS = $(CFLAGS)"
+	@echo "CXXFLAGS = $(CXXFLAGS)"
