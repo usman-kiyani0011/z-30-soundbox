@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "lvgl/lvgl.h"
 #include "page_pub.h"
 #include "page_qr.h"
@@ -238,10 +239,15 @@ void show_page_qrcode(lv_obj_t* parent, void *pfunc, char*amount, char*qrcode)
 	//QR code display
 	if(NULL != parent && strlen(qrcode)>0)
 	{
+		char title[64] = {0};
+
 		message_close_imagepage(0);
-		page_show_qrcode(parent, pfunc, amount, "Please Scan", qrcode, 60000);
+		if (amount != NULL && amount[0] != '\0')
+		{
+			snprintf(title, sizeof(title), "Amount (PKR): %s", amount);
+		}
+		page_show_qrcode(parent, pfunc, (title[0] != '\0') ? title : amount, "Please Scan", qrcode, 60000);
 	}
 	
 	return;
 }
-

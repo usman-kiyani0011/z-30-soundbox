@@ -136,7 +136,7 @@ int ScanPage(lv_obj_t* parent, char*amount)
 	lab_text = lv_label_create(scan_body, NULL);
 	lv_label_set_long_mode(lab_text, LV_LABEL_LONG_BREAK);
 	lv_label_set_recolor(lab_text, true);
-	sprintf(title, "Amount:%s", amount);
+	sprintf(title, "Amount (PKR): %s", amount);
 	lv_label_set_text(lab_text, title);
 	lv_label_set_align(lab_text, LV_LABEL_ALIGN_CENTER);
 	lv_obj_set_width(lab_text, lv_obj_get_width(parent) - 10);
@@ -171,4 +171,3 @@ int ScanPage(lv_obj_t* parent, char*amount)
 	MFSDK_UNUSED(HttpIdleflag);
 	return 0;
 }
-

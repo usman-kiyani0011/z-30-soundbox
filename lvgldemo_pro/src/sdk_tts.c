@@ -153,6 +153,17 @@ void pub_tts_play_amt_india(int amt)
 
 }
 
+static void pub_tts_play_amt_india_paise(int amt)
+{
+	if (amt <= 0)
+	{
+		return;
+	}
+
+	sdk_tts_play_lt(amt);
+	PubMultiPlay((const s8*)"Paise.mp3");
+}
+
 
 
 void sdk_tts_play_amt_en(int amt)
@@ -183,26 +194,24 @@ void sdk_tts_play_amt_en(int amt)
 
 void pub_tts_play_amt_en(int amt)
 {
-    PubMultiPlay((const s8*)"pay.mp3");
-	if (amt >= 100)
-	{
-	    sdk_tts_play_amt_en(amt / 100);
-	    PubMultiPlay((const s8*)"dollar.mp3");
+	int rupees = amt / 100;
+	int paise = amt % 100;
 
-	    if (amt % 100 != 0)
-	    {
-	        PubMultiPlay((const s8 *)"and.mp3");
-	        sdk_tts_play_amt_en(amt % 100);
-	        PubMultiPlay((const s8 *)"cents.mp3");
-	    }
-	}
-	else
+	PubMultiPlay((const s8*)"pay.mp3");
+
+	if (rupees > 0)
 	{
-	    if (amt % 100 != 0)
-	    {
-	        sdk_tts_play_amt_en(amt % 100);
-	        PubMultiPlay((const s8*)"cents.mp3");
-	    }
+		pub_tts_play_amt_india(rupees);
+
+		if (paise > 0)
+		{
+			PubMultiPlay((const s8*)"and.mp3");
+			pub_tts_play_amt_india_paise(paise);
+		}
+	}
+	else if (paise > 0)
+	{
+		pub_tts_play_amt_india_paise(paise);
 	}
 }
 				
@@ -391,4 +400,3 @@ void AppPlayBatteryIndonesia(void)
 		}
 	}
 }
-

@@ -245,7 +245,7 @@ lv_obj_t* page_card_showamt(lv_obj_t* parent, void* pfunc, char* title, void* tr
     ret = lv_load_png_file(RFPNG);
 	if(1 == ret)
 	{
-		sprintf(msg, "Amount:%0.2f", amt/100.00);
+		sprintf(msg, "Amount (PKR): %0.2f", amt/100.00);
 	    lab_buff = page_create_msg(page_win, msg);
         lv_obj_t* img = lv_img_create(page_win, NULL);
         lv_img_set_src(img, RFPNG);
@@ -253,7 +253,7 @@ lv_obj_t* page_card_showamt(lv_obj_t* parent, void* pfunc, char* title, void* tr
 	}
 	else
 	{
-	    sprintf(msg, "Please tap card\r\nAmount:\r\n%0.2f", amt/100.00);
+	    sprintf(msg, "Please tap card\r\nAmount (PKR):\r\n%0.2f", amt/100.00);
 	    lab_buff = page_create_msg(page_win, msg);
 	}
 
