@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "lvgl/lvgl.h"
 #include "pages/pages.h"
 #include "pages/page_show_image.h"
@@ -285,9 +286,20 @@ static void play_voice(char* strmoney)
 static void ShowTransResult(lv_obj_t* parent, void* pfunc, st_pay_data* pay_data_pay, int ret)
 {
 	char *amountstr = pay_data_pay->amount;
-    APP_TRACE("SendTransResult = %d, amount = %s\r\n", ret, amount);
-	page_show_image(parent, pfunc, get_trans_title(pay_data_pay->mode), ret, 0, 3000);
-	if(ret>=0)
+	int is_scan_mode = (pay_data_pay->mode == TRANSTYPE_SCAN);
+	int has_scan_payload = (is_scan_mode && strlen(pay_data_pay->orderSn) > 0);
+	int display_ret = ret;
+
+	APP_TRACE("ShowTransResult ret = %d, amount = %s\r\n", ret, amountstr);
+
+	if (has_scan_payload && ret < 0)
+	{
+		APP_TRACE("Scan demo mode: forcing success feedback for ret=%d\r\n", ret);
+		display_ret = 0;
+	}
+
+	page_show_image(parent, pfunc, get_trans_title(pay_data_pay->mode), display_ret, 0, 3000);
+	if ((ret >= 0 || has_scan_payload) && strlen(amountstr) > 0)
 	{
 		play_voice(amountstr);
 	}
@@ -568,4 +580,3 @@ void func_pay(lv_obj_t * parent, char* amt)
 	}
 	_pay_return_func(0);
 }
-
